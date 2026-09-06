@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Quotes Bookshelf</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&display=swap');
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+
+    :root {
+      --text-primary: #222222;
+      --text-secondary: #555555;
+      --surface-2: #ffffff;
+      --border: rgba(0, 0, 0, 0.08);
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --font-voice: 'Garamond', 'Georgia', serif;
+    }
+
+    html, body {
+      width: 100%;
+      background: #ffffff;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      overflow: auto;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface-2);
+      border-radius: 10px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+      padding: 0.5rem;
+    }
+
+    .header {
+      padding: 2rem 2rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(217, 164, 81, 0.1);
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 500;
+      color: #D9A451;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .bookshelf-wrapper {
+      flex: none;
+      overflow: visible;
+      padding: 1.25rem 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      align-items: stretch;
+    }
+
+    .bookshelf-wrapper::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .bookshelf-wrapper::-webkit-scrollbar-track {
+      background: rgba(217, 164, 81, 0.05);
+    }
+
+    .bookshelf-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(217, 164, 81, 0.2);
+      border-radius: 4px;
+    }
+
+    .bookshelf-wrapper::-webkit-scrollbar-thumb:hover {
+      background: rgba(217, 164, 81, 0.3);
+    }
+
+    .shelf-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .section-title {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.7;
+    }
+
+    .bookshelf {
+      display: flex;
+      gap: 12px;
+      padding: 22px 18px 28px;
+      /* warm wood shelf base */
+      background: linear-gradient(180deg, #d9ab6b 0%, #b27a3a 45%, #855322 100%);
+      background-repeat: no-repeat;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      overflow-x: auto;
+      min-height: 200px;
+      align-items: flex-end;
+      box-shadow: inset 0 -18px 16px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    /* subtle shelf edge */
+    .bookshelf::after {
+      /* shelf edge shadow / darker lip */
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 18px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.18));
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .bookshelf::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .bookshelf::-webkit-scrollbar-track {
+      background: rgba(217, 164, 81, 0.05);
+      border-radius: 3px;
+    }
+
+    .bookshelf::-webkit-scrollbar-thumb {
+      background: rgba(217, 164, 81, 0.2);
+      border-radius: 3px;
+    }
+
+    .bookshelf::-webkit-scrollbar-thumb:hover {
+      background: rgba(217, 164, 81, 0.3);
+    }
+
+    .book {
+      flex-shrink: 0;
+      width: 72px;
+      height: 220px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 10px 6px;
+      font-size: 40px;
+      color: white;
+      transition: all 0.28s cubic-bezier(0.23, 1, 0.32, 1);
+      transform: translateY(0);
+      border: 1px solid rgba(0,0,0,0.12);
+      position: relative;
+      overflow: hidden;
+      /* subtle book leather/cloth shading */
+      background: linear-gradient(135deg, #8a5a34 0%, #c07a3f 60%);
+      box-shadow: inset -6px 0 12px rgba(0,0,0,0.08), 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .book:hover {
+      transform: translateY(-16px) scale(1.05);
+      box-shadow: 0 16px 40px rgba(217, 164, 81, 0.35);
+      border-color: rgba(217, 164, 81, 0.5);
+      z-index: 10;
+    }
+
+    .book.film {
+      background: linear-gradient(135deg, #6B1D47 0%, #A4161A 100%);
+    }
+
+    /* spine and cover inside each book */
+    .book { position: relative; }
+    .book .spine {
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      bottom: 4px;
+      width: 44px;
+      box-sizing: border-box;
+      /* darker wood tone for spine */
+      background: linear-gradient(180deg, #6b3f24 0%, #8b5a34 60%, #6a3c20 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 6px;
+      border-radius: 2px;
+      box-shadow: inset 0 2px 6px rgba(255,255,255,0.03);
+      border-right: 2px solid rgba(0,0,0,0.16);
+      z-index: 3;
+    }
+      z-index: 3;
+    }
+
+    .spine-title {
+      display: block;
+      transform: rotate(-90deg);
+      transform-origin: center center;
+      color: #fff8e7;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      font-family: 'Libre Franklin', var(--font-sans);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.6px;
+      white-space: nowrap;
+      text-align: center;
+      max-width: 220px;
+      overflow: visible;
+      line-height: 1;
+      padding: 0 4px;
+    }
+
+    .book .cover-img {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      bottom: 6px;
+      left: 56px; /* leave room for wider spine */
+      object-fit: cover;
+      border-radius: 3px;
+      display: none;
+    }
+
+    .book:hover .cover-img { display: block; }
+
+    .add-book-btn {
+      flex-shrink: 0;
+      width: 72px;
+      height: 260px;
+      border-radius: 3px;
+      border: 2px dashed rgba(217, 164, 81, 0.3);
+      background: rgba(217, 164, 81, 0.05);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: rgba(217, 164, 81, 0.5);
+      transition: all 0.3s;
+      font-size: 24px;
+    }
+
+    .add-book-btn:hover {
+      border-color: rgba(217, 164, 81, 0.5);
+      background: rgba(217, 164, 81, 0.1);
+      color: rgba(217, 164, 81, 0.8);
+      transform: translateY(-8px);
+    }
+
+    .add-book-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(4px);
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #2d2620 0%, #1a1612 100%);
+      border-radius: 12px;
+      border: 1px solid rgba(217, 164, 81, 0.2);
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+      position: relative;
+      margin: auto;
+    }
+
+    .modal-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: rgba(217, 164, 81, 0.2);
+      border-radius: 3px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(217, 164, 81, 0.3);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(217, 164, 81, 0.15);
+      border: 1px solid rgba(217, 164, 81, 0.3);
+      color: #D9A451;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+
+    .close-btn:hover {
+      background: rgba(217, 164, 81, 0.25);
+      border-color: rgba(217, 164, 81, 0.5);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #D9A451;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(217, 164, 81, 0.2);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: rgba(217, 164, 81, 0.5);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 2px rgba(217, 164, 81, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: var(--font-sans);
+    }
+
+    .type-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(217, 164, 81, 0.1);
+      border: 1px solid rgba(217, 164, 81, 0.2);
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .toggle-btn.active {
+      background: rgba(217, 164, 81, 0.3);
+      border-color: rgba(217, 164, 81, 0.5);
+      color: #D9A451;
+    }
+
+    .quotes-input-group {
+      background: rgba(255,255,255,0.02);
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid rgba(217, 164, 81, 0.1);
+      margin-bottom: 1rem;
+    }
+
+    .quote-inputs {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(217, 164, 81, 0.1);
+    }
+
+    .quote-inputs:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .add-quote-btn,
+    .remove-quote-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+      background: rgba(217, 164, 81, 0.15);
+      border: 1px solid rgba(217, 164, 81, 0.3);
+      color: #D9A451;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-quote-btn:hover,
+    .remove-quote-btn:hover {
+      background: rgba(217, 164, 81, 0.25);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 2rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: rgba(217, 164, 81, 0.3);
+      border: 1px solid rgba(217, 164, 81, 0.4);
+      color: #D9A451;
+    }
+
+    .btn-primary:hover {
+      background: rgba(217, 164, 81, 0.4);
+      border-color: rgba(217, 164, 81, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(217, 164, 81, 0.2);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .entry-title {
+      font-size: 18px;
+      color: #D9A451;
+      margin-bottom: 0.5rem;
+    }
+
+    .entry-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .quote {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(217, 164, 81, 0.1);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .quote:last-child {
+      border-bottom: none;
+    }
+
+    .quote-text {
+      font-family: var(--font-voice);
+      font-size: 14px;
+      line-height: 1.8;
+      color: #F5E6D3;
+      font-style: italic;
+      margin-bottom: 0.75rem;
+    }
+
+    .quote-author {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+
+    .entry-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(217, 164, 81, 0.1);
+    }
+
+    .edit-btn,
+    .delete-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 12px;
+      border: 1px solid rgba(217, 164, 81, 0.3);
+      background: rgba(217, 164, 81, 0.1);
+     
+      color: #D9A451;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .delete-btn {
+      background: rgba(255, 100, 100, 0.1);
+      border-color: rgba(255, 100, 100, 0.3);
+      color: #FF6464;
+    }
+
+    .edit-btn:hover {
+      background: rgba(217, 164, 81, 0.2);
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 100, 100, 0.2);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .icon-input-helper {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1 class="header-title">Jake's Quotes</h1>
+      <p class="header-subtitle">My Favorite Quotes</p>
+    </div>
+
+    <div class="bookshelf-wrapper">
+      <!-- Books Section -->
+      <div class="shelf-section">
+        <div class="section-title">📖 Books</div>
+        <div class="bookshelf" id="booksShelf">
+          <div class="add-book-btn" onclick="openAddForm('book')">
+            <span>+</span>
+            <span class="add-book-label">Add Book</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Films Section -->
+      <div class="shelf-section">
+        <div class="section-title">🎬 Films</div>
+        <div class="bookshelf" id="filmsShelf">
+          <div class="add-book-btn" onclick="openAddForm('film')">
+            <span>+</span>
+            <span class="add-book-label">Add Film</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="addModal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeAddModal()">&times;</button>
+      <h2 class="modal-title">Add to Collection</h2>
+      
+      <div class="type-toggle">
+        <button class="toggle-btn active" onclick="setType('book')" id="bookToggle">📖 Book</button>
+        <button class="toggle-btn" onclick="setType('film')" id="filmToggle">🎬 Film</button>
+      </div>
+
+      <form id="entryForm" onsubmit="submitForm(event)">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" id="title" placeholder="Enter title" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="authorLabel">Author</label>
+          <input type="text" id="author" placeholder="Enter author name" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Icon/Emoji</label>
+          <input type="text" id="icon" placeholder="e.g., 📖 or 🎬" maxlength="2">
+          <div class="icon-input-helper">Pick an emoji that represents this</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cover Image</label>
+          <input type="file" id="cover" accept="image/*">
+          <div class="icon-input-helper">Optional: upload a cover image (PNG/JPG). It will appear in the modal and on hover.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Quotes</label>
+          <div class="quotes-input-group" id="quotesContainer">
+            <div class="quote-inputs">
+              <div class="form-group">
+                <label class="form-label">Quote 1</label>
+                <textarea placeholder="Enter quote text" class="quote-text-input"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Context/Character</label>
+                <input type="text" placeholder="e.g., Character name or scene" class="quote-author-input">
+              </div>
+            </div>
+          </div>
+          <button type="button" class="add-quote-btn" onclick="addQuoteInput()">+ Add Quote</button>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn-primary">Save</button>
+          <button type="button" class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+  <div id="viewModal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeViewModal()">&times;</button>
+      <div id="viewContent"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentType = 'book';
+    let collection = [];
+    let currentEditingId = null;
+    let currentViewingId = null;
+
+    // Load from localStorage
+    function loadCollection() {
+      try {
+        const stored = localStorage.getItem('quotes-collection');
+        if (stored) {
+          collection = JSON.parse(stored);
+          renderBookshelf();
+        }
+      } catch (e) {
+        console.log('Using fresh collection');
+      }
+    }
+
+    // Save to localStorage
+    function saveCollection() {
+      try {
+        localStorage.setItem('quotes-collection', JSON.stringify(collection));
+      } catch (e) {
+        console.log('Save error:', e);
+      }
+    }
+
+    function openAddForm(type) {
+      currentType = type;
+      currentEditingId = null;
+      setType(type);
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+      resetForm();
+    }
+
+    function closeViewModal() {
+      document.getElementById('viewModal').classList.remove('active');
+    }
+
+    function setType(type) {
+      currentType = type;
+      document.getElementById('bookToggle').classList.toggle('active', type === 'book');
+      document.getElementById('filmToggle').classList.toggle('active', type === 'film');
+      document.getElementById('authorLabel').textContent = type === 'book' ? 'Author' : 'Director';
+    }
+
+    function addQuoteInput() {
+      const container = document.getElementById('quotesContainer');
+      const quoteNum = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = 'quote-inputs';
+      div.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">Quote ${quoteNum}</label>
+          <textarea placeholder="Enter quote text" class="quote-text-input"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Context/Character</label>
+          <input type="text" placeholder="e.g., Character name or scene" class="quote-author-input">
+        </div>
+        <button type="button" class="remove-quote-btn" onclick="this.parentElement.remove()">Remove</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const author = document.getElementById('author').value;
+      const icon = document.getElementById('icon').value || (currentType === 'book' ? '📖' : '🎬');
+
+      const quoteInputs = document.querySelectorAll('.quote-inputs');
+      const quotes = [];
+      quoteInputs.forEach(qi => {
+        const text = qi.querySelector('.quote-text-input').value;
+        const quoteAuthor = qi.querySelector('.quote-author-input').value;
+        if (text.trim()) {
+          quotes.push({ text, author: quoteAuthor || 'Unknown' });
+        }
+      });
+
+      if (quotes.length === 0) {
+        alert('Add at least one quote!');
+        return;
+      }
+
+      const coverFile = document.getElementById('cover') ? document.getElementById('cover').files[0] : null;
+
+      function finalizeSave(coverDataUrl) {
+        if (currentEditingId) {
+          const idx = collection.findIndex(c => c.id === currentEditingId);
+          collection[idx] = {
+            id: currentEditingId,
+            title,
+            author,
+            icon,
+            type: currentType,
+            quotes,
+            cover: coverDataUrl || collection[idx].cover || null
+          };
+        } else {
+          const entry = {
+            id: Date.now(),
+            title,
+            author,
+            icon,
+            type: currentType,
+            quotes,
+            cover: coverDataUrl || null
+          };
+          collection.push(entry);
+        }
+
+        saveCollection();
+        renderBookshelf();
+        closeAddModal();
+      }
+
+      if (coverFile) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          finalizeSave(ev.target.result);
+        };
+        reader.readAsDataURL(coverFile);
+      } else {
+        finalizeSave(null);
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('entryForm').reset();
+      document.getElementById('quotesContainer').innerHTML = `
+        <div class="quote-inputs">
+          <div class="form-group">
+            <label class="form-label">Quote 1</label>
+            <textarea placeholder="Enter quote text" class="quote-text-input"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Context/Character</label>
+            <input type="text" placeholder="e.g., Character name or scene" class="quote-author-input">
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBookshelf() {
+      const booksShelf = document.getElementById('booksShelf');
+      const filmsShelf = document.getElementById('filmsShelf');
+      
+      booksShelf.innerHTML = '';
+      filmsShelf.innerHTML = '';
+      
+      collection.forEach(entry => {
+        const bookEl = document.createElement('div');
+        bookEl.className = `book ${entry.type}`;
+
+        // spine
+        const spine = document.createElement('div');
+        spine.className = 'spine';
+        const spineTitle = document.createElement('span');
+        spineTitle.className = 'spine-title';
+        spineTitle.textContent = entry.title;
+        spine.appendChild(spineTitle);
+        bookEl.appendChild(spine);
+
+        // cover image (optional)
+        if (entry.cover) {
+          const img = document.createElement('img');
+          img.className = 'cover-img';
+          img.src = entry.cover;
+          img.alt = entry.title + ' cover';
+          bookEl.appendChild(img);
+        } else {
+          // show icon centered when no cover
+          const iconSpan = document.createElement('div');
+          iconSpan.style.position = 'absolute';
+          iconSpan.style.left = '50%';
+          iconSpan.style.top = '50%';
+          iconSpan.style.transform = 'translate(-50%, -40%)';
+          iconSpan.style.fontSize = '40px';
+          iconSpan.textContent = entry.icon || (entry.type === 'book' ? '📖' : '🎬');
+          bookEl.appendChild(iconSpan);
+        }
+
+        bookEl.onclick = () => viewEntry(entry.id);
+
+        if (entry.type === 'book') {
+          booksShelf.appendChild(bookEl);
+        } else {
+          filmsShelf.appendChild(bookEl);
+        }
+      });
+      
+      // Add the add button to the end
+      const addBookBtn = document.createElement('div');
+      addBookBtn.className = 'add-book-btn';
+      addBookBtn.innerHTML = '<span>+</span><span class="add-book-label">Add Book</span>';
+      addBookBtn.onclick = () => openAddForm('book');
+      booksShelf.appendChild(addBookBtn);
+      
+      const addFilmBtn = document.createElement('div');
+      addFilmBtn.className = 'add-book-btn';
+      addFilmBtn.innerHTML = '<span>+</span><span class="add-book-label">Add Film</span>';
+      addFilmBtn.onclick = () => openAddForm('film');
+      filmsShelf.appendChild(addFilmBtn);
+    }
+
+    function viewEntry(id) {
+      const entry = collection.find(e => e.id === id);
+      if (!entry) return;
+      
+      currentViewingId = id;
+      const quotesHTML = entry.quotes.map(q => (
+        '<div class="quote">' +
+          '<p class="quote-text">"' + q.text + '"</p>' +
+          '<p class="quote-author">— ' + (q.author || 'Unknown') + '</p>' +
+        '</div>'
+      )).join('');
+      
+      const content = document.getElementById('viewContent');
+      let coverHTML = '';
+      if (entry.cover) {
+        coverHTML = '<div style="margin-bottom:1rem;"><img src="' + entry.cover + '" style="width:100%;height:auto;border-radius:6px;object-fit:cover;" alt="cover"></div>';
+      }
+
+      content.innerHTML =
+        '<h2 class="entry-title">' + (entry.icon || '') + ' ' + entry.title + '</h2>' +
+        '<p class="entry-meta">' + entry.author + '</p>' +
+        coverHTML +
+        quotesHTML +
+        '<div class="entry-actions">' +
+          '<button class="add-quote-btn" onclick="promptAddQuote(' + id + ')">+ Add Quote</button>' +
+          '<button class="edit-btn" onclick="editEntry(' + id + ')">Edit</button>' +
+          '<button class="delete-btn" onclick="deleteEntry(' + id + ')">Delete</button>' +
+        '</div>';
+
+      document.getElementById('viewModal').classList.add('active');
+    }
+
+    // Prompt-based quick add to the currently viewed entry
+    function promptAddQuote(id) {
+      const entry = collection.find(e => e.id === id);
+      if (!entry) return;
+      const text = prompt('Enter the quote text:');
+      if (!text || !text.trim()) return;
+      const author = prompt('Enter the quote author/context (optional):') || 'Unknown';
+      entry.quotes.push({ text: text.trim(), author: author.trim() || 'Unknown' });
+      saveCollection();
+      // refresh modal content to show the new quote
+      viewEntry(id);
+      renderBookshelf();
+    }
+
+    function editEntry(id) {
+      const entry = collection.find(e => e.id === id);
+      if (!entry) return;
+      
+      currentEditingId = id;
+      setType(entry.type);
+      document.getElementById('title').value = entry.title;
+      document.getElementById('author').value = entry.author;
+      document.getElementById('icon').value = entry.icon;
+      
+      const container = document.getElementById('quotesContainer');
+      container.innerHTML = '';
+      
+      entry.quotes.forEach((quote, idx) => {
+        const div = document.createElement('div');
+        div.className = 'quote-inputs';
+        div.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Quote ${idx + 1}</label>
+            <textarea class="quote-text-input">${quote.text}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Context/Character</label>
+            <input type="text" class="quote-author-input" value="${quote.author}">
+          </div>
+          ${idx > 0 ? '<button type="button" class="remove-quote-btn" onclick="this.parentElement.remove()">Remove</button>' : ''}
+        `;
+        container.appendChild(div);
+      });
+      
+      closeViewModal();
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('Delete this entry?')) return;
+      
+      collection = collection.filter(e => e.id !== id);
+      saveCollection();
+      renderBookshelf();
+      closeViewModal();
+    }
+
+    // Initialize
+    loadCollection();
+  </script>
+</body>
+</html>
