@@ -192,39 +192,38 @@
       left: 4px;
       top: 4px;
       bottom: 4px;
-      width: 36px;
+      width: 34px;
       box-sizing: border-box;
-      /* darker wood tone for spine */
       background: linear-gradient(180deg, #6b3f24 0%, #8b5a34 60%, #6a3c20 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 6px 6px;
+      padding: 6px 2px;
       border-radius: 2px;
       box-shadow: inset 0 2px 6px rgba(255,255,255,0.03);
       border-right: 2px solid rgba(0,0,0,0.16);
       z-index: 3;
     }
 
-
     .spine-title {
-      display: block;
-      /* vertical spine text */
+      display: flex;
+      align-items: center;
+      justify-content: center;
       writing-mode: vertical-rl;
       text-orientation: mixed;
-      transform: none;
+      transform: rotate(180deg);
       color: #fff8e7;
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       font-family: 'Libre Franklin', var(--font-sans);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 400;
-      letter-spacing: 0.4px;
-      white-space: normal;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
       text-align: center;
       max-width: none;
       overflow: visible;
       line-height: 1.1;
-      padding: 2px 4px;
+      padding: 2px 0;
     }
 
     .book .cover-img {
@@ -238,7 +237,7 @@
       display: none;
     }
 
-    .book:hover .cover-img { display: block; }
+    .book:hover .cover-img { display: none; }
 
     .add-book-btn {
       flex-shrink: 0;
@@ -852,23 +851,14 @@
         spine.appendChild(spineTitle);
         bookEl.appendChild(spine);
 
-        // cover image (optional)
+        // no cover icon on the book face; only the title remains on the spine
         if (entry.cover) {
           const img = document.createElement('img');
           img.className = 'cover-img';
           img.src = entry.cover;
           img.alt = entry.title + ' cover';
+          img.style.display = 'none';
           bookEl.appendChild(img);
-        } else {
-          // show icon centered when no cover
-          const iconSpan = document.createElement('div');
-          iconSpan.style.position = 'absolute';
-          iconSpan.style.left = '50%';
-          iconSpan.style.top = '50%';
-          iconSpan.style.transform = 'translate(-50%, -40%)';
-          iconSpan.style.fontSize = '40px';
-          iconSpan.textContent = entry.icon || (entry.type === 'book' ? '📖' : '🎬');
-          bookEl.appendChild(iconSpan);
         }
 
         bookEl.onclick = () => viewEntry(entry.id);
