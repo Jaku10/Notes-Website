@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Quotes Bookshelf</title>
+  <title>Jake's Bookshelf</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&display=swap');
     * { 
@@ -680,15 +680,70 @@
     let collection = [];
     let currentEditingId = null;
     let currentViewingId = null;
+    const collectionStorageKey = 'quotes-collection';
+    const draftStorageKey = 'quotes-draft';
+    const collectionHashKey = 'collection';
+    const draftHashKey = 'draft';
+
+    function encodeCollection(collectionToEncode) {
+      const bytes = new TextEncoder().encode(JSON.stringify(collectionToEncode));
+      let binary = '';
+      bytes.forEach(byte => binary += String.fromCharCode(byte));
+      return encodeURIComponent(btoa(binary));
+    }
+
+    function decodeCollection(encodedCollection) {
+      const binary = atob(decodeURIComponent(encodedCollection));
+      const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function getSharedCollection() {
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const encodedCollection = hashParams.get(collectionHashKey);
+      if (!encodedCollection) return null;
+
+      try {
+        const sharedCollection = decodeCollection(encodedCollection);
+        return Array.isArray(sharedCollection) ? sharedCollection : null;
+      } catch (e) {
+        console.log('Unable to load shared collection');
+        return null;
+      }
+    }
+
+    function getSharedDraft() {
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const encodedDraft = hashParams.get(draftHashKey);
+      if (!encodedDraft) return null;
+
+      try {
+        return JSON.parse(decodeURIComponent(encodedDraft));
+      } catch (e) {
+        console.log('Unable to load shared draft');
+        return null;
+      }
+    }
+
+    function updateShareLink() {
+      const shareHash = `${collectionHashKey}=${encodeCollection(collection)}`;
+      const draftHash = formDraft ? `&${draftHashKey}=${encodeURIComponent(JSON.stringify(formDraft))}` : '';
+      history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${shareHash}${draftHash}`);
+    }
 
     // Load from localStorage
     function loadCollection() {
       try {
-        const stored = localStorage.getItem('quotes-collection');
-        if (stored) {
-          collection = JSON.parse(stored);
-          renderBookshelf();
-        }
+        const sharedCollection = getSharedCollection();
+        const stored = localStorage.getItem(collectionStorageKey);
+        const sharedDraft = getSharedDraft();
+        const storedDraft = localStorage.getItem(draftStorageKey);
+        collection = sharedCollection || (stored ? JSON.parse(stored) : []);
+        formDraft = sharedDraft || (storedDraft ? JSON.parse(storedDraft) : null);
+        localStorage.setItem(collectionStorageKey, JSON.stringify(collection));
+        renderBookshelf();
+        updateShareLink();
+        if (sharedDraft) openAddForm(sharedDraft.type);
       } catch (e) {
         console.log('Using fresh collection');
       }
@@ -697,16 +752,71 @@
     // Save to localStorage
     function saveCollection() {
       try {
-        localStorage.setItem('quotes-collection', JSON.stringify(collection));
+        localStorage.setItem(collectionStorageKey, JSON.stringify(collection));
+        updateShareLink();
       } catch (e) {
         console.log('Save error:', e);
       }
+    }
+
+    let formDraft = null;
+
+    function saveDraft() {
+      const quoteInputs = document.querySelectorAll('.quote-inputs');
+      formDraft = {
+        type: currentType,
+        title: document.getElementById('title').value,
+        author: document.getElementById('author').value,
+        icon: document.getElementById('icon').value,
+        quotes: Array.from(quoteInputs).map(quoteInput => ({
+          text: quoteInput.querySelector('.quote-text-input').value,
+          author: quoteInput.querySelector('.quote-author-input').value
+        }))
+      };
+      localStorage.setItem(draftStorageKey, JSON.stringify(formDraft));
+      updateShareLink();
+    }
+
+    function restoreDraft() {
+      if (!formDraft || formDraft.type !== currentType) return;
+
+      document.getElementById('title').value = formDraft.title || '';
+      document.getElementById('author').value = formDraft.author || '';
+      document.getElementById('icon').value = formDraft.icon || '';
+      const container = document.getElementById('quotesContainer');
+      container.innerHTML = '';
+
+      (formDraft.quotes || [{ text: '', author: '' }]).forEach((quote, index) => {
+        const div = document.createElement('div');
+        div.className = 'quote-inputs';
+        div.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Quote ${index + 1}</label>
+            <textarea placeholder="Enter quote text" class="quote-text-input"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Context/Character</label>
+            <input type="text" placeholder="e.g., Character name or scene" class="quote-author-input">
+          </div>
+          ${index > 0 ? '<button type="button" class="remove-quote-btn" onclick="this.parentElement.remove(); saveDraft()">Remove</button>' : ''}
+        `;
+        div.querySelector('.quote-text-input').value = quote.text || '';
+        div.querySelector('.quote-author-input').value = quote.author || '';
+        container.appendChild(div);
+      });
+    }
+
+    function clearDraft() {
+      formDraft = null;
+      localStorage.removeItem(draftStorageKey);
+      updateShareLink();
     }
 
     function openAddForm(type) {
       currentType = type;
       currentEditingId = null;
       setType(type);
+      restoreDraft();
       document.getElementById('addModal').classList.add('active');
     }
 
@@ -795,6 +905,7 @@
         }
 
         saveCollection();
+        clearDraft();
         renderBookshelf();
         closeAddModal();
       }
@@ -969,6 +1080,7 @@
     }
 
     // Initialize
+    document.getElementById('entryForm').addEventListener('input', saveDraft);
     loadCollection();
   </script>
 </body>
